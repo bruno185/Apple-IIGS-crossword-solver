@@ -605,7 +605,6 @@ curcolok
         beq linecolok            ; no new page needed  
 
         ; new page needed
-        
         lda #0                  ; init all vars
         sta curline
         sta curcol
@@ -625,9 +624,8 @@ curcolok
         rts
 
 doclean
-        jsr cleanLowerScreen    ; erase lower part of screen
+        jsr cleanLowerScreen    ; erase lower part of screen before next page
 linecolok
-        jsr displayWCount       ; display # of words found
         clc                     ; Carry = 0 : don't stop display
         rts     
 *
