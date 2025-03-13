@@ -9,7 +9,7 @@
     6 |  1      cwGS.s      6 | Comment     | 11 |         |    0 | 00/0000               | * Description :                *
     7 |  1      cwGS.s      7 | Comment     | 11 |         |    0 | 00/0000               | * This program is a crossword solver. It reads a pattern from the keyboard, 
     8 |  1      cwGS.s      8 | Comment     | 11 |         |    0 | 00/0000               | * and displays all words that match the pattern.
-    9 |  1      cwGS.s      9 | Comment     | 11 |         |    0 | 00/0000               | * The pattern can contain letters (A-Z, a-z) and '?' as a wildcard.
+    9 |  1      cwGS.s      9 | Comment     | 11 |         |    0 | 00/0000               | * The pattern can contain letters (A-Z, a-z) and '?' as a wildcard standing for any letter.
    10 |  1      cwGS.s     10 | Comment     | 11 |         |    0 | 00/0000               | * The program uses a list of words (WORDS file) to find matching words.
    11 |  1      cwGS.s     11 | Comment     | 11 |         |    0 | 00/0000               | * The program is written in Merlin Assembler, and is intended to run on an Apple IIGS.
    12 |  1      cwGS.s     12 | Comment     | 11 |         |    0 | 00/0000               | * The program uses GS/OS calls to manage files I/O.
@@ -23,7 +23,7 @@
    20 |  1      cwGS.s     20 | Comment     | 11 |         |    0 | 00/0000               | * This Apple IIGS version is a port of the Apple II version, but data are exactly the same.
    21 |  1      cwGS.s     21 | Comment     | 11 |         |    0 | 00/0000               | * 
    22 |  1      cwGS.s     22 | Comment     | 11 |         |    0 | 00/0000               | * Copilot helped for comments mainly and for faster code writing.
-   23 |  1      cwGS.s     23 | Comment     | 11 |         |    0 | 00/0000               | * Crossrunner was used to test and debug the program.
+   23 |  1      cwGS.s     23 | Comment     | 11 |         |    0 | 00/0000               | * Crossrunner emulator was used to test and debug the program.
    24 |  1      cwGS.s     24 | Empty       | 11 |         |    0 | 00/0000               |                                                     
    25 |  1      cwGS.s     25 | Directive   | 00 |         |    0 | 00/0000               |                    MX          %00                  ; FULL 16 BIT MODE
    26 |  1      cwGS.s     26 | Directive   | 00 |         |    0 | 00/0000               |                    REL                              ; RELOCATABLE OUTPUT
