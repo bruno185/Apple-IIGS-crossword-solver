@@ -6,6 +6,9 @@ Set PRG=cwGS
 rem current folder
 Set ProjectFolder=.
 
+
+rem path to AppleWin, Merlin32, AppleCommander, ActiveGS
+rem change it to your own path
 Set MyAppleFolder=F:\Bruno\Dev\AppleWin
 Set APPLEWIN=%MyAppleFolder%\AppleWin\Applewin.exe
 Set MERLIN32ROOT=%MyAppleFolder%\Merlin32_v1.0
@@ -13,10 +16,10 @@ Set MERLIN32LIBS=%MERLIN32ROOT%\Library
 Set MERLIN32WIN=%MERLIN32ROOT%\Windows
 Set MERLIN32EXE=%MERLIN32WIN%\merlin32.exe
 Set APPLECOMMANDER=%MyAppleFolder%\Utilitaires\AppleCommander-win64-1.6.0.jar
-rem Set ACJAR=java.exe -jar %APPLECOMMANDER%    ; avec ""
+Set ACTIVEGSPATH=%MyAppleFolder%\GS\activeGS
 Set ACJAR=java.exe -jar %APPLECOMMANDER%
-rem echo %ACJAR%
-Set DEST="F:\Bruno\Dev\AppleWin\GS\activeGS\Live.Install.po"
+rem Set DEST="F:\Bruno\Dev\AppleWin\GS\activeGS\Live.Install.po"
+Set DEST=".\cwgs.po"
 
 echo --------------- debut Merlin ---------------
 %MERLIN32EXE% -V %MERLIN32LIBS% %ProjectFolder%\%PRG%.s
@@ -32,8 +35,7 @@ echo --------------- fin Applecommander ---------------
 
 rem %APPLEWIN% -d1 %PRG%.po
 rem echo --------------- Debut ActiveGS ---------------
-Set ACTIVEGSPATH=%MyAppleFolder%\GS\activeGS
-cd %ACTIVEGSPATH%
+rem cd %ACTIVEGSPATH%
 rem .\ActiveGS.exe
 rem echo --------------- Fin ActiveGS ---------------
 

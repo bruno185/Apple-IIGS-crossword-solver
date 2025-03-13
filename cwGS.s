@@ -362,8 +362,7 @@ s3exit
         lda wordscnt            ; get # of words found 
                                 ; !! should take account of wordcount on 4 bytes
         jsr intToStr            ; convert to string
-        ConcatStr strwf;labelwf;int_str
-        jsr displayWCount       ; display # of words found
+        ConcatStr strwf;labelwf;int_str         ; prepare string to display
         rts
 *
 * >>> STEP 4
@@ -447,7 +446,7 @@ l2
         rts
 *
 * >>> STEP 5
-* Dispaly page 1, manage UI
+* Dispaly matching words, manage UI
 step5
         MX %00
         rep #30                 ; 16 bits
@@ -516,6 +515,7 @@ nextbmbyte
 doCloseFile
         ; Close file
         iGSOS _Close;CLOSE_PARM;1         ; Close file class 0 call
+        jsr displayWCount       ; display # of words found
         rts
 *
 *
@@ -981,7 +981,7 @@ deltaY          equ 10
 WcharWidth      ds 2
 
 leftMargin      equ 10
-;leftMargin      equ 40                 ; left margin : change this value to change margins
+;leftMargin      equ 35                 ; left margin : change this value to change margins
 topMargin       equ 60
 
 gap             ds 2
