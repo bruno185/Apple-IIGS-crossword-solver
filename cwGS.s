@@ -10,14 +10,24 @@
 * The program uses a list of words (WORDS file) to find matching words.
 * The program is written in Merlin Assembler, and is intended to run on an Apple IIGS.
 * The program uses GS/OS calls to manage files I/O.
-* The program mimic a console application, on a 320x200 screen.
+* The program mimic a console application, on a 320x200 graphic screen.
+
+* It works for french and english, both provided in this archieve, but can be adapted to any language.
+* Of course, data (Words and index) must be adapted to the language then.
+* See the Apple II version here : 
+* https://github.com/bruno185/Apple-II-crossword-solver-v.2.1-French 
+* for details on data files and how to create them.
+* This Apple IIGS version is a port of the Apple II version, but data are exactly the same.
+* 
+* Copilot helped for comments mainly and for faster code writing.
+* Crossrunner was used to test and debug the program.
 
         MX %00          ; FULL 16 BIT MODE
         REL             ; RELOCATABLE OUTPUT
         DSK cwGS.L
 
         use E16.GSOS    ; GS/OS calls, in this archive
-                        ; folowing files are in Merlin32 Library folder      
+                        ; folowing macros files are in Merlin32 Library folder      
         use 4/GsOs.Macs
         use 4/Dos.16.Macs
         use 4/Util.Macs
@@ -33,57 +43,43 @@
         use 4/Line.Macs
         use 4/Font.Macs
 
-        use my.Macs
-
-* load  02/0f55
-prodos  equ $e100a8     ; prodos 16 entry point
-kybd    equ $00c000
-strobe  equ $00c010
-*
-*
-dpmem           equ $4
-Screenmode      equ $00         ; 0=320; $80=640 pixels wide
-MaxWidth        equ 0           ; $0=full screen width 
-MaxPatLength    equ 15
-bitmapSize      equ 10000
-screenwidth     equ 320
-screenheight    equ 200
+        use my.Macs     ; my macros, in this archive, specific to this program
 
 ENTRY
         PHK
         PLB
         clc 
         xce
-        rep #$30
+        rep #$30                ; A, X, Y in 16 bits
 
-* get préfix 
         iGSOS _GetPrefix;PREFIX_PARM;1          ; get cuurent prefix (application path)
-        jsr InitTools
+        jsr InitTools           ; init tools of the toolbox
+        jsr welcomeScreen       ; fill screen with white display prompt
+        jsr miscInits           ; init misc vars
+*
 *
 * * * * * * * * * * * * * * * MAIN LOOP * * * * * * * * * * * * * * *
 *
-        jsr welcomeScreen       ; fill screen with white display prompt
-        jsr miscInits
 main       
         lda quitflag            ; test exit flag
         beq taskLoop            ; = 0 : loop 
-        jsr ConfimExit
-        bcc taskLoop
-        jmp Exit                ; <> 0 : quit
+        jsr ConfimExit          ; = 1 : confirm exit
+        bcc taskLoop            ; carry = 0 : go on
+        jmp Exit                ; carry = 1 : exit
 taskLoop
         PushWord #$0000         ; space for result
         PushWord #$FFFF         ; all events
         ;PushWord %000000000001110      ; accept (from right to left): mouse down, mouse up, key down
-        PushLong #evtrec
-        _TaskMaster
-        jsr PrepareToDie          
-        pla 
-        beq main
-        lda event
+        PushLong #evtrec        ; event record
+        _TaskMaster             ; get event
+        jsr PrepareToDie        ; check for error        
+        pla                     ; get event
+        beq main                ; no event : loop
+        lda event               ; get event
         cmp #$3                 ; keydown only
-        bne taskLoop
-        jsr DoKey
-        bra main
+        bne taskLoop            ; other event : loop
+        jsr DoKey               ; manage key down
+        bra main                ; loop
 *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 * manage key down
@@ -91,18 +87,18 @@ DoKey
         ; test key (A-Z, a-z, ?, esc)
         lda message     ; get key code
         cmp #27         ; escape key ?
-        bne noesc 
-        lda #1              
+        bne noesc       ; no : go on
+        lda #1          ; yes : set quit flag       
         sta quitflag    ; yes : exit 
         rts 
 
 noesc
         cmp #13         ; return key ?
-        bne noreturn
-        ldy patternLen 
-        cpy #2          ; a valid pattern must be 2 chars long
-        bcc :1
-        jmp ProcessPat
+        bne noreturn    ; no : go on
+        ldy patternLen  ; get length of pattern string
+        cpy #2          ; a valid pattern must be 2 chars long at least
+        bcc :1          ; < 2 : no action
+        jmp ProcessPat  ; >= 2 : process pattern
 :1
         rts
 
@@ -136,10 +132,10 @@ ok1
         bcs ok2         ; < Z : exit
         rts 
 ok2
-        cmp #'z'+1
+        cmp #'z'+1      ; between a and z : ok
         bcc okchar
         rts 
-                    ; > z
+                
 okchar
         sep #$30        ; display string
         MX %11
@@ -161,16 +157,16 @@ okdel
 
         PushWord #$0000         ; space for result
         PushLong #patternLen    ; center string
-        _StringWidth
-        pla 
-        lsr 
-        sta posX
-        lda #screenwidth/2
-        sec 
+        _StringWidth            ; get width of pattern string
+        pla                     ; get result
+        lsr                     ; divide by 2
+        sta posX                ; save it
+        lda #screenwidth/2      ; get center of screen
+        sec                     ; substract half width of string
         sbc posX
-        sta posX
-        goto posX;#40
-        PushLong #patternLen
+        sta posX                ; save it
+        goto posX;#40           ; set cursor position
+        PushLong #patternLen 
         _DrawString             ; print string
         MakeLStr patternLen     ; make long string
         rts
@@ -209,7 +205,7 @@ ProcessPat
 step0    
         MX %00
         rep #$30   
-        lda #$FFFF
+        lda #$FFFF              ; fill bitmap1 with 1
         ldx #bitmapSize-2
 :1
         sta bitmap1,x 
@@ -345,11 +341,11 @@ nextbyte
 
         rep #$30
         MX %00                  ; 16 bits
-        lda wordscnt 
-        ora wordscnt+1
+        lda wordscnt            ; get # of words found
+        ora wordscnt+1          
         ora wordscnt+2
         ora wordscnt+3
-        bne s3exit
+        bne s3exit              ; exit if 1 or more words found
 
         ; here if no word found
         jsr cleanLowerScreen    ; erase lower part of screen
@@ -383,7 +379,7 @@ step4
         lda #gapinit            ; init horizontal gap between words 
         sta gap
         lda patternLen          ; get pattern length (word, including 1st letter of pattern)
-        and #$00FF              ; save short pattern length (1 byte)
+        and #$00FF              ; trunc to short pattern length (1 byte)
         asl                     ; * 2 to get offset in widthTable
         tax                     ; x = widthTable offset
         lda widthTable,x        ; get width of a word (made of 'W') of pattern length
@@ -710,7 +706,8 @@ welcomeScreen
 
         ; draw title string center screen
         PushWord #$0000         ; space for result
-        PushLong #title
+        PushLong #title        ; title for French version
+        ;PushLong #titleE        ; title for English version
         _StringWidth
         pla 
         lsr 
@@ -720,7 +717,8 @@ welcomeScreen
         sbc posX
         sta posX
         goto posX;#10
-        PushLong #title
+        PushLong #title        ; title for French version
+        ;PushLong #titleE        ; title for English version
         _DrawString
 
         ; draw prompt string center screen
@@ -905,12 +903,25 @@ realdeath
         _SysFailMgr             ; fail
 *
 *
-* * * * * * * * * * * * * * * DATA  * * * * * * * * * * * * * * *
+* * * * * * * * * * * DATA  and EQUATES * * * * * * * * * * *
+*
+prodos  equ $e100a8     ; prodos 16 entry point
+kybd    equ $00c000
+strobe  equ $00c010
+*
+*
+dpmem           equ $4          ; address in direct page
+Screenmode      equ $00         ; 0=320; $80=640 pixels wide
+MaxWidth        equ 0           ; $0=full screen width 
+MaxPatLength    equ 15          ; max length of pattern string
+bitmapSize      equ 10000       ; size of bitmap1 and bitmap2
+screenwidth     equ 320         ; screen width
+screenheight    equ 200         ; screen height
 
-wordscnt        ds 4
-noletter        ds 2
+wordscnt        ds 4    ; # of words found
+noletter        ds 2    ; flag : 1 if only '?' in pattern string
 
-evtrec
+evtrec                  ; event record
 event   ds 2
 message ds 4   
 time    ds 4
@@ -921,7 +932,7 @@ tdata   ds 4
 tmask   dw $0000
         dw $0000
 
-color   ds 2
+color   ds 2            ; color
 
 toolTable
         dw numtools
@@ -943,73 +954,64 @@ toolTable
 tablesize       equ *-toolTable
 numtools        equ tablesize/4
 *
-*
-DeathMsg        str "I'm dying now." 
-*
-id              dS 2
+id              dS 2    ; id of application
 *
 * string to display
+DeathMsg        str "I'm dying now." 
 prompt          str 'Type pattern (a-z, A-Z, ?)'
-title           str 'CROSSWORD SOLVER (French - ODS9++)'
+title           str 'CROSSWORD SOLVER (French - ODS9++)'        ; title for French version
+titleE          str 'CROSSWORD SOLVER (English)'                ; title for English version
 exitquestion    str 'Esc to quit, any key to continue'
 noword          str 'No word found'
 labelwf         str 'Words found : '
-strwf           ds 20
+strwf           ds 20                   ; space for labbelwf + # of words found
 *
-myRect          ds 8 
+myRect          ds 8    ; space for rectangle
 *
-patternLen      ds 2
-pattern         ds 16
+patternLen      ds 2    ; length of pattern string
+pattern         ds 16   ; followed by 16 bytes of pattern string
 *
-quitflag        ds 2
+quitflag        ds 2    ; flag : 1 = quit
+*
+hextable        asc '0123456789ABCDEF'  ; hex table for conversion
+*
+* Variables for words display
+cursorPosH      ds 2    ; cursor position horizontal (in pixels)
+cursorPosV      ds 2    ; cursor position vertical (in pixels)
+posX            ds 2    ; position X in column # (0 to maxX)
+posY            ds 2    ; position Y in line # (0 to maxY)
+maxX            ds 2    ; calculated max # of words per line (depending on word length)
+;maxY            equ 10 ; max # of lines, change this value to change # of lines
+maxY            equ 12  ; max # of lines, change this value to change # of lines
+deltaX          ds 2    ; width of a word + gap
+deltaY          equ 10  ; space between lines
+WcharWidth      ds 2    ; width of a 'W' (largest letter)
+leftMargin      equ 10  ; left margin : change this value to change margins
+;leftMargin      equ 35 ; left margin : change this value to change margins
+topMargin       equ 60  ; top margin
+gap             ds 2    ; gap between words
+gapinit         equ 3   ; gap between words 
 
-hextable        asc '0123456789ABCDEF'
-
-cursorPosH      ds 2
-cursorPosV      ds 2
-posX            ds 2
-posY            ds 2
-
-maxX            ds 2
-
-;maxY            equ 10                  ; max # of lines, change this value to change # of lines
-maxY            equ 12
-
-deltaX          ds 2
-deltaY          equ 10
-
-WcharWidth      ds 2
-
-leftMargin      equ 10
-;leftMargin      equ 35                 ; left margin : change this value to change margins
-topMargin       equ 60
-
-gap             ds 2
-gapinit         equ 3
-
-tempo           ds 2
-shortlength     ds 2
-
-index_size      ds 4
-
-pat_pos         ds 2
+index_size      ds 4    ; size of index file
+*
+pat_pos         ds 2    ; current position in pattern string
 
 erase_p_rect
         dw 30,0,42,320  ; top left bottom right
 
-wordppage       ds 2
-wordwidth       ds 2
-linewidth       ds 2
-lmarge          ds 2
-
-curline         ds 2
-curcol          ds 2
+wordppage       ds 2    ; # of words per page
+wordwidth       ds 2    ; width of a word
+linewidth       ds 2    ; width of a line
+lmarge          ds 2    ; left margin, when line is centered
+curline         ds 2    ; current line
+curcol          ds 2    ; current column
 wordpos         ds 4    ; current bit position in bitmap1 = position of word in WORDS file
 a_word_l        ds 1    ; length byte of found word
 a_word          ds 16   ; 16 bytes of word found in WORDS file
-filepos         ds 4    ; file position = word counter * 16 (16 bytes per word in WORDS file)
-
-widthTable
+filepos         ds 4    ; file position = word counter (var wordscnt) * 16 
+                        ; (16 bytes per word in WORDS file)
+*
+widthTable              ; precalculated table of widths of a word whose length = pattern length
                 dw 0    ; length 0      : no pattern length should be 0
                 dw 0    ; length 1      : no pattern length should be 1
                 ds 2    ; length 2      : 2 chars
@@ -1077,7 +1079,7 @@ prefix_length
 prefix  ds 256                  ; prefix string 
 
 full_path
-        ds 128
+        ds 128                ; full path to file
         hex 00
 
 mydir
@@ -1088,11 +1090,11 @@ dir_path
         ds 128          ; must be set to path to directory containing index files
 
 W_filename
-        strl 'WORDS'
+        strl 'WORDS'    ; name of file containing words
         hex 00
 
 indexName
-        strl '??'
+        strl '??'       ; name of index file
         
-bitmap1 ds 10000
-bitmap2 ds 10000
+bitmap1 ds 10000        ; bitmap for result
+bitmap2 ds 10000        ; bitmap for index
