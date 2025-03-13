@@ -6,7 +6,7 @@
 * Description :                *
 * This program is a crossword solver. It reads a pattern from the keyboard, 
 * and displays all words that match the pattern.
-* The pattern can contain letters (A-Z, a-z) and '?' as a wildcard.
+* The pattern can contain letters (A-Z, a-z) and '?' as a wildcard standing for any letter.
 * The program uses a list of words (WORDS file) to find matching words.
 * The program is written in Merlin Assembler, and is intended to run on an Apple IIGS.
 * The program uses GS/OS calls to manage files I/O.
@@ -20,7 +20,7 @@
 * This Apple IIGS version is a port of the Apple II version, but data are exactly the same.
 * 
 * Copilot helped for comments mainly and for faster code writing.
-* Crossrunner was used to test and debug the program.
+* Crossrunner emulator was used to test and debug the program.
 
         MX %00          ; FULL 16 BIT MODE
         REL             ; RELOCATABLE OUTPUT
