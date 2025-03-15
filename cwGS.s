@@ -68,8 +68,8 @@ main
         jmp Exit                ; carry = 1 : exit
 taskLoop
         PushWord #$0000         ; space for result
-        PushWord #$FFFF         ; all events
-        ;PushWord %000000000001110      ; accept (from right to left): mouse down, mouse up, key down
+        ;PushWord #$FFFF         ; all events
+        PushWord %000000000001110      ; accept (from right to left): mouse down, mouse up, key down
         PushLong #evtrec        ; event record
         _TaskMaster             ; get event
         jsr PrepareToDie        ; check for error        
@@ -176,11 +176,12 @@ okdel
 * manage a valid pattern string
 ProcessPat
 * STEPS : 
-
-* 2/ process index ==> final bitmap
-* 3/ count words, prepare display
-* 4/ Calculate # of page, words per page, etc. 
-* 5/ Dispaly page 1, manage UI
+* 0 : prepare mem for index, init vars
+* 1 : Analyse string : length (oK), only ? or not, set prefix etc.
+* 2 : process index ==> final bitmap
+* 3 : count words, prepare display
+* 4 : Calculate # of page, words per page, etc. dispaly page 1, manage UI
+* 5 : Dispaly results, manage UI
 
 * By default, all routines start and end in 16 bits mode
 * if 8 bits mode is needed, it is set in the routine
@@ -317,7 +318,7 @@ step3
         sep #$20                ; A : 8 bits ; X,Y : 16 bits
         ldx #0
 loadnew
-        lda bitmap1,x           ; get a byte
+        lda bitmap1,x           ; get a byte from bitmap1
         beq nextbyte            ; if 0 : no word, loop
         ldy #8                  ; init bit counter
 shift
@@ -349,7 +350,7 @@ nextbyte
 
         ; here if no word found
         jsr cleanLowerScreen    ; erase lower part of screen
-        jsr noWordMsg
+        jsr noWordMsg           ; display message
         pla                     ; pull return address => next rts will exit Dokey function
                                 ; and go to main loop
         rts
@@ -393,7 +394,7 @@ step4
         lda #0
         sta maxX               ; init max # of columns
         lda #screenwidth-leftMargin-leftMargin   ; available space for a line of words (l / r margins kept)
-* maxX = max # of words per line (= # of columns)
+* set maxX = max # of words per line (= # of columns)
 getmaxX 
         sec
         sbc deltaX              ; substract width+gap
@@ -401,37 +402,34 @@ getmaxX
         inc maxX                ; inc # of columns
         bra getmaxX             ; loop
 maxdone
-* linewidth, lmarge
-        ldx maxX
+* set linewidth and lmarge
+        ldx maxX                ; linewidth = maxX * (wordwidth + gap) - gap
         lda #0                  ; init word counter (result)
         clc
 l1
         adc wordwidth           ; add width of a word
-        dex
-        bne l1
-        ldx maxX
-        dex
-l2
-        clc
         adc gap                 ; add gap
         dex
-        bne l2
-        sta linewidth           ; save it
-        lda #screenwidth 
+        bne l1
+        sec 
+        sbc gap                 ; substract gap : in a line, there is n words and n-1 gaps
+                                ; n = maxX
+        sta linewidth           ; save it line width (linewidth var)
+        lda #screenwidth        ; lmarge = (screenwidth - linewidth) / 2
         sec
         sbc linewidth           ; get space left
         lsr                     ; divide by 2
-        sta lmarge
+        sta lmarge              ; save it
 
 * wordppage = # of words per page
-        ldx #maxY
+        ldx #maxY               ; wordppage = maxY * maxX
         lda #0
 :1
         clc
         adc maxX
         dex 
         bne :1
-        sta wordppage
+        sta wordppage           ; save it
 
         lda patternLen           ; get pattern length
         sep #$30
@@ -691,23 +689,23 @@ andData                          ; AND bitmap1 with bitmap2
 *
 welcomeScreen
         ; fill scrren with white
-        PushLong #myRect
+        PushLong #myRect        ; setup rect
         PushWord #0
         PushWord #0
         PushWord #screenwidth
         PushWord #screenheight
         _SetRect
-        lda #15
-        sta color
-        PushWord color    ; color = white 
-        _SetSolidPenPat
-        PushLong #myRect
-        _PaintRect
+        lda #whiteColor
+        sta color               ; white
+        PushWord color    
+        _SetSolidPenPat         ; set pen color
+        PushLong #myRect        
+        _PaintRect              ; fill rect
 
         ; draw title string center screen
         PushWord #$0000         ; space for result
-        PushLong #title        ; title for French version
-        ;PushLong #titleE        ; title for English version
+        PushLong #title         ; title for French version
+        ;PushLong #titleE       ; title for English version
         _StringWidth
         pla 
         lsr 
@@ -715,7 +713,7 @@ welcomeScreen
         lda #screenwidth/2
         sec 
         sbc posX
-        sta posX
+        sta posX                ; posX = screenwidth/2 - title width/2
         goto posX;#10
         PushLong #title        ; title for French version
         ;PushLong #titleE        ; title for English version
@@ -731,7 +729,7 @@ welcomeScreen
         lda #screenwidth/2
         sec 
         sbc posX
-        sta posX
+        sta posX                ; posX = screenwidth/2 - prompt width/2
         goto posX;#25
         PushLong #prompt
         _DrawString
@@ -741,13 +739,13 @@ welcomeScreen
 
 cleanLowerScreen
         PushLong #myRect        ; erase lower part of screen
-        PushWord #0
+        PushWord #0             ; setup rect
         PushWord #topMargin-10
         PushWord #320
         PushWord #200
         _SetRect
         PushLong #myRect
-        _PaintRect
+        _PaintRect              ; fill rect
         rts
 *
 *
@@ -812,10 +810,9 @@ noWordMsg
 
         rts
 
-ConfimExit
-        jsr cleanLowerScreen
-
-        ; draw title string center screen
+ConfimExit                      ; confirm exit
+        jsr cleanLowerScreen    ; erase lower part of screen
+        ; draw confirmation question string center screen
         PushWord #$0000         ; space for result
         PushLong #exitquestion
         _StringWidth
@@ -831,7 +828,7 @@ ConfimExit
         _DrawString
 
         jsr get_key
-        and #$007F              ; clear hi byte
+        and #$007F              ; clear hi byte and bit 7
         clc
         cmp #$1B                ; escape key ? (bit 7 set)
 
@@ -840,25 +837,25 @@ ConfimExit
         sta quitflag            ; set quitflag = 0 to indicate no exit in next loop
         jsr cleanLowerScreen
         clc                     ; clear carry (also flag)
-        rts                     ; no : go on with carry = 0
+        rts                     ; exit with carry = 0 (no exit flag)
 realexit
-        sec                     ; yes : set carry = 1 (exit flag)
+        sec                     ; exit with carry = 1 (exit flag)
         rts
 
 *
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* * * * * * * * * * * * INCLUDES * * * * * * * * * * * *
 *
         put initTools
         put int2str
 *
-*
-* * * * * * * * * * * * * * * EXIT * * * * * * * * * * * * * * *
+* * * * * * * * * * * * EXIT * * * * * * * * * * * * * *
 *
 * ShutDownTools
 * Order : cf. Apple IIGS Assembly Language Programming (p.188/189)
 *
-        MX %00
+        
 Exit
+        MX %00
         rep #$30
         _FMShutDown
         _MenuShutDown
@@ -896,7 +893,7 @@ error   brk $00         ; we'll never get here?
 PrepareToDie
         bcs realdeath
         rts
-realdeath
+realdeath               ; real death
         pha                     ; push error #
         _SysBeep
         PushLong #DeathMsg      ; push message
@@ -967,6 +964,8 @@ labelwf         str 'Words found : '
 strwf           ds 20                   ; space for labbelwf + # of words found
 *
 myRect          ds 8    ; space for rectangle
+*
+whiteColor      equ 15
 *
 patternLen      ds 2    ; length of pattern string
 pattern         ds 16   ; followed by 16 bytes of pattern string
