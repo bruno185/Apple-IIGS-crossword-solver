@@ -122,6 +122,11 @@ nodel
 ok0
         cmp #'?'
         beq okchar      ; ? is wildcard
+        cmp #' '        ; space is equivalent to '?'
+        bne nospace 
+        lda #'?'        ; convert space to '?'
+        jmp okchar
+nospace   
         cmp #'A'
         bcs ok1         ; < A : exit
         rts             
@@ -168,6 +173,7 @@ okdel
         goto posX;#40           ; set cursor position
         PushLong #patternLen 
         _DrawString             ; print string
+
         MakeLStr patternLen     ; make long string
         rts
 *
@@ -715,8 +721,8 @@ welcomeScreen
         sbc posX
         sta posX                ; posX = screenwidth/2 - title width/2
         goto posX;#10
-        PushLong #title        ; title for French version
-        ;PushLong #titleE        ; title for English version
+        PushLong #title         ; title for French version
+        ;PushLong #titleE       ; title for English version
         _DrawString
 
         ; draw prompt string center screen
@@ -842,6 +848,7 @@ realexit
         sec                     ; exit with carry = 1 (exit flag)
         rts
 
+
 *
 * * * * * * * * * * * * INCLUDES * * * * * * * * * * * *
 *
@@ -955,7 +962,7 @@ id              dS 2    ; id of application
 *
 * string to display
 DeathMsg        str "I'm dying now." 
-prompt          str 'Type pattern (a-z, A-Z, ?)'
+prompt          str 'Type pattern: A-Z, ?, <space>, <del>, <esc>'
 title           str 'CROSSWORD SOLVER (French - ODS9++)'        ; title for French version
 titleE          str 'CROSSWORD SOLVER (English)'                ; title for English version
 exitquestion    str 'Esc to quit, any key to continue'
@@ -985,8 +992,10 @@ maxY            equ 12  ; max # of lines, change this value to change # of lines
 deltaX          ds 2    ; width of a word + gap
 deltaY          equ 10  ; space between lines
 WcharWidth      ds 2    ; width of a 'W' (largest letter)
-leftMargin      equ 10  ; left margin : change this value to change margins
+leftMargin      equ 5  ; left margin : change this value to change margins
 ;leftMargin      equ 35 ; left margin : change this value to change margins
+                       ; wider margin is useful for kegs on Android, since sides of screen
+                       ; are not visible
 topMargin       equ 60  ; top margin
 gap             ds 2    ; gap between words
 gapinit         equ 3   ; gap between words 

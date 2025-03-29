@@ -105,3 +105,10 @@ goto            MAC
                 PushWord ]2
                 _MoveTo
                 <<<
+        
+gotoXY          MAC
+                phx
+                phy
+                _MoveTo
+                <<<
+
