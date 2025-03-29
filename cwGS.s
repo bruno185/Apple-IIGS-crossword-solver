@@ -711,7 +711,6 @@ welcomeScreen
         ; draw title string center screen
         PushWord #$0000         ; space for result
         PushLong #title         ; title for French version
-        ;PushLong #titleE       ; title for English version
         _StringWidth
         pla 
         lsr 
@@ -722,7 +721,6 @@ welcomeScreen
         sta posX                ; posX = screenwidth/2 - title width/2
         goto posX;#10
         PushLong #title         ; title for French version
-        ;PushLong #titleE       ; title for English version
         _DrawString
 
         ; draw prompt string center screen
@@ -964,7 +962,7 @@ id              dS 2    ; id of application
 DeathMsg        str "I'm dying now." 
 prompt          str 'Type pattern: A-Z, ?, <space>, <del>, <esc>'
 title           str 'CROSSWORD SOLVER (French - ODS9++)'        ; title for French version
-titleE          str 'CROSSWORD SOLVER (English)'                ; title for English version
+;title          str 'CROSSWORD SOLVER (English)'                ; title for English version
 exitquestion    str 'Esc to quit, any key to continue'
 noword          str 'No word found'
 labelwf         str 'Words found : '

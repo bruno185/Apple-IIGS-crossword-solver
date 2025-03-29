@@ -14,7 +14,7 @@ It works for french and english, both provided in this archieve, but can be adap
 See the Apple II version here : 
 https://github.com/bruno185/Apple-II-crossword-solver-v.2.1-French 
 for details on data files and how to create them.\
-This Apple IIGS version is a port of the Apple II version, but data are exactly the same.\
+This Apple IIGS version is a port of the Apple II version, but data are almost the same.\
 \
 Copilot integratd in Visual Studio Code helped for comments mainly and for faster code writing.
 Merlin32 compiled the source files.

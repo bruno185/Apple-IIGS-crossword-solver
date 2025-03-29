@@ -905,7 +905,7 @@
   972 |  1      cwGS.s    399 | Empty       | 00 |         |    0 | 00/02A2               |                                                     
   973 |  1      cwGS.s    400 | Code        | 00 |         |    3 | 00/02A2 : A9 00 00    |                    lda         #0                   
   974 |  1      cwGS.s    401 | Code        | 00 |  2      |    3 | 00/02A5 : 8D 4E 0A    |                    sta         maxX                 ; init max # of columns
-  975 |  1      cwGS.s    402 | Code        | 00 |         |    3 | 00/02A8 : A9 3E 01    |                    lda         #{320}-{1}-{1}       ; available space for a line of words (l / r margins kept)
+  975 |  1      cwGS.s    402 | Code        | 00 |         |    3 | 00/02A8 : A9 36 01    |                    lda         #{320}-{5}-{5}       ; available space for a line of words (l / r margins kept)
   976 |  1      cwGS.s    403 | Comment     | 00 |         |    0 | 00/02AB               | * set maxX = max # of words per line (= # of columns)
   977 |  1      cwGS.s    404 | Empty       | 00 |         |    0 | 00/02AB               | getmaxX                                             
   978 |  1      cwGS.s    405 | Code        | 00 |         |    1 | 00/02AB : 38          |                    sec                              
@@ -1317,10 +1317,10 @@
  1478 |  1      cwGS.s    711 | Comment     | 00 |         |    0 | 00/0561               |         ; draw title string center screen
  1479 |  1      cwGS.s    712 | Macro       | 00 |         |    0 | 00/0561               |                    PushWord    #$0000               ; space for result
  1481 |  1      cwGS.s    712 | Code        | 00 |         |    3 | 00/0561 : F4 00 00    |                    PEA         #$0000               
- 1484 |  1      cwGS.s    713 | Macro       | 00 |         |    0 | 00/0564               |                    PushLong    #title               ; title for French version
- 1488 |  1      cwGS.s    713 | Code        | 00 |  1 >>16 |    3 | 00/0564 : F4 00 00    |                    PEA         #^#title             
- 1495 |  1      cwGS.s    713 | Code        | 00 |  2      |    3 | 00/0567 : F4 8A 09    |                    PEA         #title               
- 1498 |  1      cwGS.s    714 | Comment     | 00 |         |    0 | 00/056A               |         ;PushLong #titleE       ; title for English version
+ 1484 |  1      cwGS.s    713 | Comment     | 00 |         |    0 | 00/0564               |         ;PushLong #title         ; title for French version
+ 1485 |  1      cwGS.s    714 | Macro       | 00 |         |    0 | 00/0564               |                    PushLong    #titleE              ; title for English version
+ 1489 |  1      cwGS.s    714 | Code        | 00 |  1 >>16 |    3 | 00/0564 : F4 00 00    |                    PEA         #^#titleE            
+ 1496 |  1      cwGS.s    714 | Code        | 00 |  2      |    3 | 00/0567 : F4 AD 09    |                    PEA         #titleE              
  1499 |  1      cwGS.s    715 | Macro       | 00 |         |    0 | 00/056A               |                    _StringWidth                       
  1501 |  1      cwGS.s    715 | Code        | 00 |         |    3 | 00/056A : A2 04 A9    |                    LDX         #$A904               ; load tool call #
  1502 |  1      cwGS.s    715 | Code        | 00 |         |    4 | 00/056D : 22 00 00 E1 |                    JSL         $E10000              ; go to dispatcher
@@ -1337,10 +1337,10 @@
  1521 |  1      cwGS.s    723 | Code        | 00 |         |    3 | 00/0584 : F4 0A 00    |                    PEA         #10                  
  1526 |  1      cwGS.s    723 | Code        | 00 |         |    3 | 00/0587 : A2 04 3A    |                    LDX         #$3A04               ; load tool call #
  1527 |  1      cwGS.s    723 | Code        | 00 |         |    4 | 00/058A : 22 00 00 E1 |                    JSL         $E10000              ; go to dispatcher
- 1528 |  1      cwGS.s    724 | Macro       | 00 |         |    0 | 00/058E               |                    PushLong    #title               ; title for French version
- 1532 |  1      cwGS.s    724 | Code        | 00 |  1 >>16 |    3 | 00/058E : F4 00 00    |                    PEA         #^#title             
- 1539 |  1      cwGS.s    724 | Code        | 00 |  2      |    3 | 00/0591 : F4 8A 09    |                    PEA         #title               
- 1542 |  1      cwGS.s    725 | Comment     | 00 |         |    0 | 00/0594               |         ;PushLong #titleE       ; title for English version
+ 1528 |  1      cwGS.s    724 | Comment     | 00 |         |    0 | 00/058E               |         ;PushLong #title         ; title for French version
+ 1529 |  1      cwGS.s    725 | Macro       | 00 |         |    0 | 00/058E               |                    PushLong    #titleE              ; title for English version
+ 1533 |  1      cwGS.s    725 | Code        | 00 |  1 >>16 |    3 | 00/058E : F4 00 00    |                    PEA         #^#titleE            
+ 1540 |  1      cwGS.s    725 | Code        | 00 |  2      |    3 | 00/0591 : F4 AD 09    |                    PEA         #titleE              
  1543 |  1      cwGS.s    726 | Macro       | 00 |         |    0 | 00/0594               |                    _DrawString                       
  1545 |  1      cwGS.s    726 | Code        | 00 |         |    3 | 00/0594 : A2 04 A5    |                    LDX         #$A504               ; load tool call #
  1546 |  1      cwGS.s    726 | Code        | 00 |         |    4 | 00/0597 : 22 00 00 E1 |                    JSL         $E10000              ; go to dispatcher
@@ -2031,7 +2031,7 @@
  2534 |  1      cwGS.s    992 | Data        | 00 |         |    2 | 00/0A50 : 00 00       | deltaX             ds          2                    ; width of a word + gap
  2535 |  1      cwGS.s    993 | Equivalence | 00 |         |    0 | 00/0A52               | deltaY             equ         10                   ; space between lines
  2536 |  1      cwGS.s    994 | Data        | 00 |         |    2 | 00/0A52 : 00 00       | WcharWidth         ds          2                    ; width of a 'W' (largest letter)
- 2537 |  1      cwGS.s    995 | Equivalence | 00 |         |    0 | 00/0A54               | leftMargin         equ         1                    ; left margin : change this value to change margins
+ 2537 |  1      cwGS.s    995 | Equivalence | 00 |         |    0 | 00/0A54               | leftMargin         equ         5                    ; left margin : change this value to change margins
  2538 |  1      cwGS.s    996 | Comment     | 00 |         |    0 | 00/0A54               | ;leftMargin      equ 35 ; left margin : change this value to change margins
  2539 |  1      cwGS.s    997 | Comment     | 00 |         |    0 | 00/0A54               |                        ; wider margin is useful for kegs on Android, since sides of screen
  2540 |  1      cwGS.s    998 | Comment     | 00 |         |    0 | 00/0A54               |                        ; are not visible
