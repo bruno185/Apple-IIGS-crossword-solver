@@ -487,12 +487,14 @@ nextbit
         bra nextbmbyte
 
 bitfound
-        pha                     ; save A
-        phx                     ; save x                             
-        phy                     ; save 
+        ; save A, X, Y on stack, needded for this loop
+        pha                     ; save A 
+        phx                     ; save X                             
+        phy                     ; save Y
         jsr getWord             ; get word from WORDS file
         jsr displayWord         ; display word. Caary is a flag to stop display or not
-        ply                     ; restore y
+        ; restore A, X, Y from stack to continue loop
+        ply                     ; restore Y
         plx                     ; restore X
         pla                     ; restore A
         bcc nextbit             ; next bit      ; Carry = 0 : go on, do NOT stop display
@@ -513,9 +515,9 @@ nextbmbyte
         bne loopbyte            ; loop if not end of index
 
 doCloseFile
-        ; Close file
+        ; Close file, all done
         iGSOS _Close;CLOSE_PARM;1         ; Close file class 0 call
-        lda wordonscreen        ; if word on screen, display # of words found
+        lda wordonscreen        ; if words on screen, display # of words found
         beq nowords             ; else user pressed escape key : no word on screen 
                                 ; so no need to display # of words found
         jsr displayWCount       ; display # of words found
@@ -559,6 +561,9 @@ mul16wc
 displayWord
         ; display word on screen
         ; input : a_word = word to display
+        ; output : 
+        ; carry = 0 : continue display
+        ; carry = 1 : stop display (user pressed escape key after end of page)
         ;
         lda #1 
         sta wordonscreen        ; set flag to display # of words found
@@ -609,7 +614,7 @@ curcolok
         ; new page needed ?           
         lda wordscnt            ; if wordscnt = # of words par page, no new page needed
         cmp wordppage
-* TODO:  * should do the same for wordppage multiples
+* TODO:  * should do the same test for wordppage multiples
         beq linecolok            ; no new page needed  
 
         ; new page needed
@@ -620,17 +625,17 @@ curcolok
 
         jsr displayWCount       ; display # of words found
 
-        jsr get_key
+        jsr get_key             ; get key to continue or not
         and #$007F              ; clear hi byte
         cmp #$1B                ; escape key ? (bit 7 set)
-        bne doclean
+        bne doclean             ; no : clean screen and go on
         
+                                ; yes :
         jsr cleanLowerScreen    ; erase lower part of screen
         lda #0                  
-        sta wordonscreen        ; flag to prevent display of word count at the bottom of the screen
-        sec                     ; Carry = 1 : stop display
+        sta wordonscreen        ; set flag to prevent display of word count at the bottom of the screen
+        sec                     ; Carry = 1 : flag to stop display
                                 ; cannot use pla here as A,X, and Y have been put on stack
-                                ; So carry is a flag to stop display
         rts
 
 doclean
