@@ -84,7 +84,7 @@ taskLoop
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 * manage key down
 DoKey
-        ; test key (A-Z, a-z, ?, esc)
+        ; test key (A-Z, a-z, ?, space, return, esc)
         lda message     ; get key code
         cmp #27         ; escape key ?
         bne noesc       ; no : go on
@@ -515,7 +515,11 @@ nextbmbyte
 doCloseFile
         ; Close file
         iGSOS _Close;CLOSE_PARM;1         ; Close file class 0 call
+        lda wordonscreen        ; if word on screen, display # of words found
+        beq nowords             ; else user pressed escape key : no word on screen 
+                                ; so no need to display # of words found
         jsr displayWCount       ; display # of words found
+nowords
         rts
 *
 *
@@ -556,8 +560,10 @@ displayWord
         ; display word on screen
         ; input : a_word = word to display
         ;
+        lda #1 
+        sta wordonscreen        ; set flag to display # of words found
         ; set cursorPosV and cursorPosH according to curline and curcol
-        lda #topMargin
+        lda #topMargin          ; cursorPosV = top margin + curline * height of a line
         sta cursorPosV
         ldx curline
         beq curlineok
@@ -569,20 +575,22 @@ addV
         bne addV
 
 curlineok  
-        lda lmarge
+        lda lmarge        ; cursorPosH = left margin + curcol * deltaX
         sta cursorPosH
         ldx curcol
         beq curcolok
 addX
         clc
-        adc deltaX
-        sta cursorPosH
+        adc deltaX      ; deltaX = width of a word + gap
+        sta cursorPosH  
         dex
         bne addX 
 
-curcolok
-        ; display word
-        goto cursorPosH;cursorPosV
+curcolok 
+        ; display word on screen
+        ; set pen position
+        goto cursorPosH;cursorPosV  
+        ; draw word
         PushLong #a_word_l
         _DrawString
 
@@ -591,15 +599,15 @@ curcolok
         lda curcol
         cmp maxX
         bcc linecolok           ; if curcol < maxX, no new line needed
-        lda #0                  ; else : init curcol
+        lda #0                  ; else : reset curcol
         sta curcol
         inc curline             ; inc curline   
-        lda curline             ;  
+        lda curline             ; get curline
         cmp #maxY               ; if curline < maxY, no new page needed
         bne linecolok
 
         ; new page needed ?           
-        lda wordscnt            ; if wordscnt = #  of words par page, no new page needed
+        lda wordscnt            ; if wordscnt = # of words par page, no new page needed
         cmp wordppage
 * TODO:  * should do the same for wordppage multiples
         beq linecolok            ; no new page needed  
@@ -618,6 +626,8 @@ curcolok
         bne doclean
         
         jsr cleanLowerScreen    ; erase lower part of screen
+        lda #0                  
+        sta wordonscreen        ; flag to prevent display of word count at the bottom of the screen
         sec                     ; Carry = 1 : stop display
                                 ; cannot use pla here as A,X, and Y have been put on stack
                                 ; So carry is a flag to stop display
@@ -923,6 +933,8 @@ screenheight    equ 200         ; screen height
 wordscnt        ds 4    ; # of words found
 noletter        ds 2    ; flag : 1 if only '?' in pattern string
 
+wordonscreen   ds 2    ; flag : 1 if word on screen, 0 if not
+
 evtrec                  ; event record
 event   ds 2
 message ds 4   
@@ -960,7 +972,7 @@ id              dS 2    ; id of application
 *
 * string to display
 DeathMsg        str "I'm dying now." 
-prompt          str 'Type pattern: A-Z, ?, <space>, <del>, <esc>'
+prompt          str 'Type pattern: A-Z, ?, <sp>, <del>, <esc>, <ret>'
 title           str 'CROSSWORD SOLVER (French - ODS9++)'        ; title for French version
 ;title          str 'CROSSWORD SOLVER (English)'                ; title for English version
 exitquestion    str 'Esc to quit, any key to continue'
