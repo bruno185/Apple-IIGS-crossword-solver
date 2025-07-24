@@ -112,3 +112,11 @@ gotoXY          MAC
                 _MoveTo
                 <<<
 
+debug           MAC
+                pha
+                phx
+                lda #$AAAA
+                ldx #$BBBB
+                plx
+                pla
+                <<<

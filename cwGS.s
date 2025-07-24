@@ -10,7 +10,7 @@
 * The program uses a list of words (WORDS file) to find matching words.
 * The program is written in Merlin Assembler, and is intended to run on an Apple IIGS.
 * The program uses GS/OS calls to manage files I/O.
-* The program mimic a console application, on a 320x200 graphic screen.
+* The program mimics a console application, on a 320x200 graphic screen.
 
 * It works for french and english, both provided in this archieve, but can be adapted to any language.
 * Of course, data (Words and index) must be adapted to the language then.
@@ -24,7 +24,8 @@
 
         MX %00          ; FULL 16 BIT MODE
         REL             ; RELOCATABLE OUTPUT
-        DSK cwGS.L
+        DSK cwGS
+        TYP $B3
 
         use E16.GSOS    ; GS/OS calls, in this archive
                         ; folowing macros files are in Merlin32 Library folder      
@@ -52,10 +53,11 @@ ENTRY
         xce
         rep #$30                ; A, X, Y in 16 bits
 
-        iGSOS _GetPrefix;PREFIX_PARM;1          ; get cuurent prefix (application path)
-        jsr InitTools           ; init tools of the toolbox
-        jsr welcomeScreen       ; fill screen with white display prompt
-        jsr miscInits           ; init misc vars
+        iGSOS _GetPrefix;PREFIX_PARM;1  ; get cuurent prefix (application path)
+        jsr InitTools                   ; init tools of the toolbox
+        jsr welcomeScreen               ; fill screen with white display prompt
+        jsr miscInits                   ; init misc vars
+        debug
 *
 *
 * * * * * * * * * * * * * * * MAIN LOOP * * * * * * * * * * * * * * *
@@ -68,8 +70,8 @@ main
         jmp Exit                ; carry = 1 : exit
 taskLoop
         PushWord #$0000         ; space for result
-        ;PushWord #$FFFF         ; all events
-        PushWord %000000000001110      ; accept (from right to left): mouse down, mouse up, key down
+        ;PushWord #$000E        ; taskMask
+        PushWord #%000000000001110  ; same in binary, accept (from right to left): mouse down, mouse up, key down
         PushLong #evtrec        ; event record
         _TaskMaster             ; get event
         jsr PrepareToDie        ; check for error        
@@ -725,7 +727,7 @@ welcomeScreen
 
         ; draw title string center screen
         PushWord #$0000         ; space for result
-        PushLong #title         ; title for French version
+        PushLong #title         ; title 
         _StringWidth
         pla 
         lsr 

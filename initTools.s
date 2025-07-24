@@ -26,9 +26,10 @@ InitTools
         ; Sound Manager         : $100
         ; Standard File Operations : $100
         ; SANE                  : $100
+        ; Total                 : 12 pages = $0C00 bytes
 
         PushLong #0
-        PushLong #$0C00  ; 12 pages
+        PushLong #$0C00         ; 12 pages
         PushWord id
         PushWord #$C005         ; Locked, fixed location, page aligned, fixed bank
         PushLong #0             ; Location = bank 0
